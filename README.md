@@ -16,3 +16,15 @@ INDEX_NAME=<knowledge base index name in Pinecone>
 ### Fast api Start
 
 1. Run ```uvicorn backend.main:app --reload```
+
+
+### PostgreSQL
+
+1. Install PostgreSql ```apt install postgresql```
+2. Change user ```sudo -i -u postgres```
+3. Create database ```createdb usos_bot_db```
+4. Enter database ```psql -d usos_bot_db```
+5. Check connection info ```\conninfo```
+   1. You should get ```You are connected to database "usos_bot_db" as user "postgres" via socket in "/var/run/postgresql" at port "5432".```
+6. Create root user ```CREATE USER root WITH PASSWORD 'root';```
+7. Add privileges ```GRANT ALL PRIVILEGES ON DATABASE usos_bot_db TO root;```
