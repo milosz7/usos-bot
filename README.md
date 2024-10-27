@@ -12,3 +12,7 @@ GROQ_API_KEY=<groq api key>
 PINECONE_API_KEY=<pinecone api>
 INDEX_NAME=<knowledge base index name in Pinecone>
 ```
+
+### Fast api Start
+
+1. Run ```uvicorn backend.main:app --reload```

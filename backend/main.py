@@ -20,7 +20,3 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 @app.get('/')
 async def root():
     return {"message": "Fast Api check!"}
-
-# source venv/bin/activate
-# uvicorn backend.main:app --reload
-# deactivate
