@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <h4>FastAPI with Google Oauth</h4>
+      </div>
+      <a href="/login" class="google-btn">
+        <div class="google-icon"></div>
+        <span class="btn-text">Signin with Gmail</span>
+      </a>
+    </div>
+</body>
+</html>
