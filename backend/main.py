@@ -9,12 +9,12 @@ from backend.routers import users
 from backend.auth import auth
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="add any string...")
-app.mount("/static", StaticFiles(directory="backend/static"), name="static")
+app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
 app.include_router(users.router, tags=["users"])
 app.include_router(auth.router, tags=["auth"])
 
-templates = Jinja2Templates(directory="backend/templates")
+templates = Jinja2Templates(directory="frontend/templates")
 
 @app.get("/")
 def index(request: Request):
