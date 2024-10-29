@@ -11,6 +11,8 @@ Project is built using Python 3.12.
 GROQ_API_KEY=<groq api key>
 PINECONE_API_KEY=<pinecone api>
 INDEX_NAME=<knowledge base index name in Pinecone>
+GOOGLE_CLIENT_ID=<google client id api key console.cloud.google.com>
+GOOGLE_CLIENT_SECRET=<google client secret api key console.cloud.google.com>
 ```
 
 ### Fast api Start
