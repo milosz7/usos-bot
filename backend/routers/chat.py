@@ -3,12 +3,15 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 from pydantic import BaseModel
-from backend.routers.raq import response
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
+from backend.rag_model import RAGModel
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 router = APIRouter()
-
+model_graph = RAGModel()
 templates = Jinja2Templates(directory="frontend/templates")
 
 
@@ -28,7 +31,7 @@ async def chat(message_request: MessageRequest):
     user_message = message_request.message
     thread_id = message_request.thread_id
     # Dummy response for demonstration purposes
-    chatbot_response = response(user_message, thread_id)
+    chatbot_response = model_graph.respond(user_message, thread_id)
     return MessageResponse(response=chatbot_response)
 
 
@@ -36,7 +39,6 @@ async def chat(message_request: MessageRequest):
 @router.get("/hi", response_class=HTMLResponse)
 async def get_chat(request: Request):
     user = request.session.get("user")
-    print(user)
     if not user:
         return RedirectResponse("/")
     return templates.TemplateResponse(
