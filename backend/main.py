@@ -5,13 +5,13 @@ from starlette.middleware.sessions import SessionMiddleware
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
-from backend.routers import users
+from backend.routers import chat
 from backend.auth import auth
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="add any string...")
 app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 
-app.include_router(users.router, tags=["users"])
+app.include_router(chat.router, tags=["chat"])
 app.include_router(auth.router, tags=["auth"])
 
 templates = Jinja2Templates(directory="frontend/templates")
