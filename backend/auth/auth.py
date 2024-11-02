@@ -16,14 +16,14 @@ GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 
 oauth = OAuth()
 oauth.register(
-    name='google',
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    name="google",
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_id=GOOGLE_CLIENT_ID,
     client_secret=GOOGLE_CLIENT_SECRET,
     client_kwargs={
-        'scope': 'email openid profile',
-        'redirect_url': 'http://localhost:8000/auth'
-    }
+        "scope": "email openid profile",
+        "redirect_url": "http://localhost:8000/auth",
+    },
 )
 router = APIRouter()
 
@@ -32,27 +32,26 @@ templates = Jinja2Templates(directory="frontend/templates")
 
 @router.get("/login")
 async def login(request: Request):
-    url = request.url_for('auth')
+    url = request.url_for("auth")
     return await oauth.google.authorize_redirect(request, url)
 
 
-@router.get('/auth')
+@router.get("/auth")
 async def auth(request: Request):
     try:
         token = await oauth.google.authorize_access_token(request)
     except OAuthError as e:
         return templates.TemplateResponse(
-            name='error.html',
-            context={'request': request, 'error': e.error}
+            name="error.html", context={"request": request, "error": e.error}
         )
-    user = token.get('userinfo')
+    user = token.get("userinfo")
     if user:
-        request.session['user'] = dict(user)
-    return RedirectResponse('welcome')
+        request.session["user"] = dict(user)
+    return RedirectResponse("hi")
 
 
-@router.get('/logout')
+@router.get("/logout")
 def logout(request: Request):
-    request.session.pop('user')
+    request.session.pop("user")
     request.session.clear()
-    return RedirectResponse('/')
+    return RedirectResponse("/")

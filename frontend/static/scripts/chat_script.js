@@ -1,14 +1,22 @@
 // static/js/script.js
 
-// Function to send a message to the FastAPI backend
-async function sendMessage() {
-    const userInput = document.getElementById("user-input");
-    const message = userInput.value;
+document.getElementById("chatForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const userInput = document.getElementById("userInput");
+            const message = userInput.value
 
-    if (!message.trim()) return;
+            if (userInput.value.trim()) {
+                addUserMessage(message)
+                // Clear input field
+                userInput.value = "";
 
-    displayMessage("You: " + message);
-    userInput.value = "";
+                const bot_message = await getMessage(message)
+                addBotMessage(bot_message)
+            }
+        });
+
+async function getMessage(text) {
+    if (!text.trim()) return;
 
     try {
         const response = await fetch("/chat", {
@@ -16,25 +24,53 @@ async function sendMessage() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ message: message, thread_id: "123abc" })
+            body: JSON.stringify({ message: text, thread_id: "123abc" })
         });
 
         if (response.ok) {
             const data = await response.json();
-            displayMessage("Chatbot: " + data.response);
+            return data.response;
         } else {
-            displayMessage("Chatbot: Error occurred.");
+            return "Error occurred."
         }
     } catch (error) {
-        displayMessage("Chatbot: Unable to connect.");
+        return "Unable to connect."
     }
 }
 
-// Function to display messages in the chat window
-function displayMessage(text) {
-    const chatWindow = document.getElementById("chat-window");
-    const messageElement = document.createElement("div");
-    messageElement.textContent = text;
-    chatWindow.appendChild(messageElement);
+function addUserMessage(text) {
+    const chatWindow = document.getElementById("chatWindow");
+
+    const userMessage = document.createElement("div");
+    userMessage.className = "mb-4 text-right";
+    userMessage.innerHTML = `
+        <p class="text-gray-500 text-sm">Ty</p>
+        <div class="bg-purple_3 p-3 rounded-lg inline-block text-white">${text}</div>
+    `;
+    chatWindow.appendChild(userMessage);
+
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
+
+function addBotMessage(text) {
+    const chatWindow = document.getElementById("chatWindow");
+
+    const botMessage = document.createElement("div");
+    botMessage.className = "mb-4";
+    botMessage.innerHTML = `
+        <p class="text-gray-500 text-sm">UsosBot</p>
+        <div class="bg-purple_3 p-3 rounded-lg inline-block text-white">${text}</div>
+    `;
+    chatWindow.appendChild(botMessage);
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+document.getElementById("toggleSidebarBtn").addEventListener("click", function() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("hidden");
+        });
+
+document.getElementById("picture_logout").addEventListener("click", function() {
+            window.location.href = "/logout"
+        });

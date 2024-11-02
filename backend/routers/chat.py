@@ -5,18 +5,22 @@ from fastapi import Request
 from pydantic import BaseModel
 from backend.routers.raq import response
 from fastapi.staticfiles import StaticFiles
+from starlette.responses import RedirectResponse
 
 router = APIRouter()
 
 templates = Jinja2Templates(directory="frontend/templates")
+
 
 # Chat request and response models
 class MessageRequest(BaseModel):
     thread_id: str
     message: str
 
+
 class MessageResponse(BaseModel):
     response: str
+
 
 # Load a sample chatbot model or use OpenAI's API (example)
 @router.post("/chat", response_model=MessageResponse)
@@ -31,7 +35,10 @@ async def chat(message_request: MessageRequest):
 # Serve the HTML frontend
 @router.get("/hi", response_class=HTMLResponse)
 async def get_chat(request: Request):
+    user = request.session.get("user")
+    print(user)
+    if not user:
+        return RedirectResponse("/")
     return templates.TemplateResponse(
-        name="chat.html",
-        context={"request": request}
+        name="index.html", context={"request": request, "user": user}
     )

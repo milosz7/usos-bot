@@ -30,3 +30,9 @@ GOOGLE_CLIENT_SECRET=<google client secret api key console.cloud.google.com>
    1. You should get ```You are connected to database "usos_bot_db" as user "postgres" via socket in "/var/run/postgresql" at port "5432".```
 6. Create root user ```CREATE USER root WITH PASSWORD 'root';```
 7. Add privileges ```GRANT ALL PRIVILEGES ON DATABASE usos_bot_db TO root;```
+
+### Tailwind
+
+1. Install NPM ```sudo apt install npm```
+2. Install tailwind ```npm install -D tailwindcss```
+3. Run ```npx tailwindcss -i ./frontend/static/css/input.css -o ./frontend/static/css/output.css --watch```
