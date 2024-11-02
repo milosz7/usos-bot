@@ -1,5 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -8,6 +7,11 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from backend.routers import chat
 from backend.auth import auth
+import os
+from dotenv import load_dotenv, find_dotenv
+
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+load_dotenv(find_dotenv())
 
 origins = ["http://localhost:20002", "http://127.0.0.1:20002"]
 app = FastAPI()
