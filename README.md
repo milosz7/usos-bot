@@ -13,6 +13,7 @@ PINECONE_API_KEY=<pinecone api>
 INDEX_NAME=<knowledge base index name in Pinecone>
 GOOGLE_CLIENT_ID=<google client id api key console.cloud.google.com>
 GOOGLE_CLIENT_SECRET=<google client secret api key console.cloud.google.com>
+DB_CONN_STR="postgresql://[user]:[password]@[address]:[port]/postgres?sslmode=disable"
 ```
 
 ### Fast api Start
