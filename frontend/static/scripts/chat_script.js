@@ -15,6 +15,8 @@ if(document.getElementById("chatForm")) {
                 // Clear input field
                 userInput.value = "";
 
+                createAnimation()
+
                 const bot_message = await getMessage(message, thread_id);
                 addBotMessage(bot_message);
             }
@@ -32,10 +34,51 @@ if (document.getElementById("initChat")) {
                 // Clear input field
                 userInput.value = "";
 
+                createAnimation()
+
                 const bot_message = await initChat(message)
                 addBotMessage(bot_message)
             }
         });
+}
+
+const textToAnimate = [".", "..", "..."]; // The sequence of dots
+let index = 0; // Keeps track of the current dot sequence
+let interval;
+
+function startAnimation(writingElement) {
+    interval = setInterval(() => {
+    writingElement.textContent = textToAnimate[index];
+    index = (index + 1) % textToAnimate.length; // Cycle through the dots
+    }, 350); // Change dot every 500ms
+}
+
+function deleteAnimation() {
+    const animation = document.getElementById("writingAnimation")
+    if (animation) {
+        animation.parentNode.remove();
+    }
+    index = 0;
+}
+
+function createAnimation() {
+    addBotAnimationMessage()
+    const writingElement = document.getElementById("writingAnimation");
+    startAnimation(writingElement)
+}
+
+function addBotAnimationMessage() {
+    const chatWindow = document.getElementById("chatWindow");
+
+    const botMessage = document.createElement("div");
+    botMessage.className = "mb-4";
+    botMessage.innerHTML = `
+        <p class="text-gray-500 text-sm">UsosBot</p>
+        <div id="writingAnimation" class="bg-gray-700 p-3 rounded-lg inline-block text-white"></div>
+    `;
+    chatWindow.appendChild(botMessage);
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
 
@@ -100,6 +143,7 @@ function addUserMessage(text) {
 }
 
 function addBotMessage(text) {
+    deleteAnimation()
     const chatWindow = document.getElementById("chatWindow");
 
     const botMessage = document.createElement("div");
