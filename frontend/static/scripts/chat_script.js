@@ -71,6 +71,6 @@ document.getElementById("toggleSidebarBtn").addEventListener("click", function()
             sidebar.classList.toggle("hidden");
         });
 
-document.getElementById("picture_logout").addEventListener("click", function() {
+document.getElementById("button_logout").addEventListener("click", function() {
             window.location.href = "/logout"
         });

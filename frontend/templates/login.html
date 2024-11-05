@@ -1,20 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Home Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UsosBot</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/output.css') }}">
 </head>
-<body>
-    <div class="container">
-      <div class="header">
-        <h4>FastAPI with Google Oauth</h4>
+<body class="flex items-center justify-center min-h-screen bg-gray-900 text-gray-200">
+
+  <div class="container mx-auto">
+    <div class="bg-gray-800 rounded-lg shadow-lg p-6 md:flex md:items-center md:justify-between max-w-lg mx-auto">
+
+      <!-- UsosBot Text -->
+      <div class="text-center md:text-left mb-4 md:mb-0">
+        <h1 class="text-3xl font-bold text-white">UsosBot</h1>
       </div>
-      <a href="/login" class="google-btn">
-        <div class="google-icon"></div>
-        <span class="btn-text">Signin with Gmail</span>
-      </a>
+
+      <!-- Gmail Login Button -->
+      <div class="text-center md:text-right">
+        <button id="login_button" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center w-full md:w-auto transition duration-200">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.13 0 5.94 1.08 8.16 2.86l6.13-6.13C34.9 3.21 29.7 1 24 1 14.94 1 7.1 6.48 3.5 14.07l7.39 5.74C12.47 13.57 17.88 9.5 24 9.5z"/>
+            <path fill="#34A853" d="M48 24c0-1.76-.15-3.43-.43-5.07H24v9.59h13.34c-.57 2.9-2.29 5.4-4.8 7.08v5.9h7.74C45.37 37.3 48 31.15 48 24z"/>
+            <path fill="#FBBC05" d="M3.5 14.07C1.26 17.64 0 22.62 0 24c0 1.38.26 5.33 3.5 9.93l7.39-5.74c-1.53-2.5-2.4-5.47-2.4-8.93s.87-6.43 2.4-8.93l-7.39-5.74z"/>
+            <path fill="#4285F4" d="M24 48c6.48 0 11.92-2.15 15.88-5.77L32.14 36.4c-2.22 1.46-4.96 2.31-8.14 2.31-6.13 0-11.55-4.06-13.08-9.74l-7.4 5.74C7.1 41.52 14.94 47 24 47z"/>
+          </svg>
+          Login with Gmail
+        </button>
+      </div>
+
     </div>
+  </div>
+<script src="{{ url_for('static', path='/scripts/login_script.js') }}"></script>
 </body>
 </html>
