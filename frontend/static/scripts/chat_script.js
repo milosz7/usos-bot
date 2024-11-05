@@ -1,6 +1,28 @@
 // static/js/script.js
 
-document.getElementById("chatForm").addEventListener("submit", async function(event) {
+
+if(document.getElementById("chatForm")) {
+    const url = window.location;
+    const path = url.pathname;
+    const thread_id = path.split("chat/")[1];
+    document.getElementById("chatForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const userInput = document.getElementById("userInput");
+            const message = userInput.value
+
+            if (userInput.value.trim()) {
+                addUserMessage(message);
+                // Clear input field
+                userInput.value = "";
+
+                const bot_message = await getMessage(message, thread_id);
+                addBotMessage(bot_message);
+            }
+        });
+}
+
+if (document.getElementById("initChat")) {
+    document.getElementById("initChat").addEventListener("submit", async function(event) {
             event.preventDefault();
             const userInput = document.getElementById("userInput");
             const message = userInput.value
@@ -10,12 +32,14 @@ document.getElementById("chatForm").addEventListener("submit", async function(ev
                 // Clear input field
                 userInput.value = "";
 
-                const bot_message = await getMessage(message)
+                const bot_message = await initChat(message)
                 addBotMessage(bot_message)
             }
         });
+}
 
-async function getMessage(text) {
+
+async function initChat(text) {
     if (!text.trim()) return;
 
     try {
@@ -38,6 +62,29 @@ async function getMessage(text) {
     }
 }
 
+async function getMessage(text, thread_id) {
+    if (!text.trim()) return;
+
+    try {
+            const response = await fetch("/chat/" + thread_id, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: text, thread_id: thread_id })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.response;
+        } else {
+            return "Error occurred."
+        }
+    } catch (error) {
+        return "Unable to connect."
+    }
+}
+
 function addUserMessage(text) {
     const chatWindow = document.getElementById("chatWindow");
 
@@ -45,7 +92,7 @@ function addUserMessage(text) {
     userMessage.className = "mb-4 text-right";
     userMessage.innerHTML = `
         <p class="text-gray-500 text-sm">Ty</p>
-        <div class="bg-purple_3 p-3 rounded-lg inline-block text-white">${text}</div>
+        <div class="bg-gray-700 p-3 rounded-lg inline-block text-white">${text}</div>
     `;
     chatWindow.appendChild(userMessage);
 
@@ -59,7 +106,7 @@ function addBotMessage(text) {
     botMessage.className = "mb-4";
     botMessage.innerHTML = `
         <p class="text-gray-500 text-sm">UsosBot</p>
-        <div class="bg-purple_3 p-3 rounded-lg inline-block text-white">${text}</div>
+        <div class="bg-gray-700 p-3 rounded-lg inline-block text-white">${text}</div>
     `;
     chatWindow.appendChild(botMessage);
 

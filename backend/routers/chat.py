@@ -36,28 +36,43 @@ async def chat(request: Request, session: SessionDep, body: MessageRequest):
 async def get_chat(request: Request, session: SessionDep, thread_id: str):
     user = request.session.get("user")
     if user is None:
-        return templates.TemplateResponse(name="login.html", context={"request": request})
+        return templates.TemplateResponse(
+            name="login.html", context={"request": request}
+        )
 
-    user_thread = session.exec(select(UserThread).where(thread_id == UserThread.thread_id)).first()
+    user_thread = session.exec(
+        select(UserThread).where(thread_id == UserThread.thread_id)
+    ).first()
 
     if user_thread is None:
-        return templates.TemplateResponse(name="error.html", context={"request": request, "error": "Not found."})
+        return templates.TemplateResponse(
+            name="error.html", context={"request": request, "error": "Not found."}
+        )
 
     if user["email"] != user_thread.user_id:
-        return templates.TemplateResponse(name="error.html", context={"request": request, "error": "Unauthorized."})
+        return templates.TemplateResponse(
+            name="error.html", context={"request": request, "error": "Unauthorized."}
+        )
 
     history = model_graph.get_thread(thread_id)
 
-    return templates.TemplateResponse(name="index.html", context={"request": request, "messages": history, "user": user})
+    return templates.TemplateResponse(
+        name="index.html",
+        context={"request": request, "messages": history, "user": user},
+    )
 
 
 @router.post("/chat/{thread_id}", response_model=MessageResponse)
-def ask_model(request: Request, session: SessionDep, body: MessageRequest, thread_id: UUID):
+def ask_model(
+    request: Request, session: SessionDep, body: MessageRequest, thread_id: str
+):
     user = request.session.get("user")
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    user_thread = session.exec(select(UserThread).where(thread_id == UserThread.thread_id)).first()
+    user_thread = session.exec(
+        select(UserThread).where(thread_id == UserThread.thread_id)
+    ).first()
 
     if user_thread is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

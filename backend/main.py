@@ -14,6 +14,7 @@ import os
 from sqlmodel import SQLModel
 from contextlib import asynccontextmanager
 from backend.db.helpers import engine
+from starlette.responses import RedirectResponse
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -40,6 +41,11 @@ app.include_router(chat.router, tags=["chat"])
 app.include_router(auth.router, tags=["auth"])
 
 templates = Jinja2Templates(directory="frontend/templates")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return RedirectResponse(url="/static/icons/favicon.ico")
 
 
 @app.get("/")
