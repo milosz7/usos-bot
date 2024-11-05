@@ -46,6 +46,22 @@
                     Cześć! Jak Ci mogę pomóc?
                 </div>
             </div>
+
+
+            {% for message in messages %}
+                <div class="mb-4 {% if message.author == 'human' %} text-right{% endif %}">
+                    <p class="text-gray-500 text-sm">
+                        {% if message.author == "human" %}
+                            Ty
+                        {% else %}
+                            UsosBot
+                        {% endif %}
+                    </p>
+                    <div class="bg-purple_3 p-3 rounded-lg inline-block text-white">
+                        {{ message.content }}
+                    </div>
+                </div>
+            {% endfor %}
             <!-- New messages will be added here -->
         </div>
 
