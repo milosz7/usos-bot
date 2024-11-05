@@ -1,20 +1,31 @@
-from fastapi import FastAPI
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
-from starlette.responses import RedirectResponse
 from backend.routers import chat
 from backend.auth import auth
 import os
-from dotenv import load_dotenv, find_dotenv
+from sqlmodel import SQLModel
+from contextlib import asynccontextmanager
+from backend.db.helpers import engine
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-load_dotenv(find_dotenv())
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    SQLModel.metadata.create_all(engine)
+    yield
+
 
 origins = ["http://localhost:20002", "http://127.0.0.1:20002"]
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key="add any string...")
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +46,6 @@ templates = Jinja2Templates(directory="frontend/templates")
 def index(request: Request):
     user = request.session.get("user")
     if user:
-        return RedirectResponse("hi")
+        return templates.TemplateResponse(name="index.html", context={"request": request, "user": user})
 
-    return templates.TemplateResponse(name="home.html", context={"request": request})
+    return templates.TemplateResponse(name="login.html", context={"request": request})

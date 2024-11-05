@@ -110,7 +110,21 @@ class RAGModel:
         self.app = workflow.compile(checkpointer=self.checkpointer)
         print("Starting main loop...")
 
+    @staticmethod
+    def _get_config(thread_id):
+        return {"configurable": {"thread_id": thread_id}}
+
+    def get_thread(self, thread_id):
+        config = self._get_config(thread_id)
+        checkpoint = self.checkpointer.get(config)
+        chat_history = checkpoint["channel_values"]["chat_history"]
+        chat_history = [{"author": "human" if isinstance(msg, HumanMessage) else "ai", "content": msg.content}
+                        for msg in chat_history
+                        ]
+
+        return chat_history
+
     def respond(self, message, thread_id):
-        config = {"configurable": {"thread_id": thread_id}}
+        config = self._get_config(thread_id)
         result = self.app.invoke(dict(input=message), config=config)
         return result["answer"]

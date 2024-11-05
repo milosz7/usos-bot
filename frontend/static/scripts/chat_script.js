@@ -19,17 +19,17 @@ async function getMessage(text) {
     if (!text.trim()) return;
 
     try {
-        const response = await fetch("/chat", {
+            const response = await fetch("/chat", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ message: text, thread_id: "123abc" })
+            body: JSON.stringify({ message: text })
         });
 
         if (response.ok) {
             const data = await response.json();
-            return data.response;
+            window.location.href = `/chat/${data.response}`
         } else {
             return "Error occurred."
         }

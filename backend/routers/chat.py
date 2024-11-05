@@ -1,46 +1,70 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
 from fastapi import Request
-from pydantic import BaseModel
-from fastapi.staticfiles import StaticFiles
-from starlette.responses import RedirectResponse
 from backend.rag_model import RAGModel
-from dotenv import load_dotenv, find_dotenv
+from ..models import MessageRequest, MessageResponse, UserThread
+from typing import Annotated
+from fastapi import Depends
+from backend.db.helpers import get_session
+from sqlmodel import Session, select
+from uuid import uuid4, UUID
 
-load_dotenv(find_dotenv())
+SessionDep = Annotated[Session, Depends(get_session)]
 
 router = APIRouter()
 model_graph = RAGModel()
 templates = Jinja2Templates(directory="frontend/templates")
 
 
-# Chat request and response models
-class MessageRequest(BaseModel):
-    thread_id: str
-    message: str
-
-
-class MessageResponse(BaseModel):
-    response: str
-
-
-# Load a sample chatbot model or use OpenAI's API (example)
-@router.post("/chat", response_model=MessageResponse)
-async def chat(message_request: MessageRequest):
-    user_message = message_request.message
-    thread_id = message_request.thread_id
-    # Dummy response for demonstration purposes
-    chatbot_response = model_graph.respond(user_message, thread_id)
-    return MessageResponse(response=chatbot_response)
-
-
-# Serve the HTML frontend
-@router.get("/hi", response_class=HTMLResponse)
-async def get_chat(request: Request):
+@router.post("/chat")
+async def chat(request: Request, session: SessionDep, body: MessageRequest):
     user = request.session.get("user")
     if not user:
-        return RedirectResponse("/")
-    return templates.TemplateResponse(
-        name="index.html", context={"request": request, "user": user}
-    )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    thread_id = str(uuid4())
+    new_thread = UserThread(user_id=user["email"], thread_id=thread_id)
+    session.add(new_thread)
+    session.commit()
+    session.refresh(new_thread)
+    model_graph.respond(body.message, thread_id)
+
+    return {"response": thread_id}
+
+
+@router.get("/chat/{thread_id}")
+async def get_chat(request: Request, session: SessionDep, thread_id: str):
+    user = request.session.get("user")
+    if user is None:
+        return templates.TemplateResponse(name="login.html", context={"request": request})
+
+    user_thread = session.exec(select(UserThread).where(thread_id == UserThread.thread_id)).first()
+
+    if user_thread is None:
+        return templates.TemplateResponse(name="error.html", context={"request": request, "error": "Not found."})
+
+    if user["email"] != user_thread.user_id:
+        return templates.TemplateResponse(name="error.html", context={"request": request, "error": "Unauthorized."})
+
+    history = model_graph.get_thread(thread_id)
+
+    return templates.TemplateResponse(name="index.html", context={"request": request, "messages": history, "user": user})
+
+
+@router.post("/chat/{thread_id}", response_model=MessageResponse)
+def ask_model(request: Request, session: SessionDep, body: MessageRequest, thread_id: UUID):
+    user = request.session.get("user")
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    user_thread = session.exec(select(UserThread).where(thread_id == UserThread.thread_id)).first()
+
+    if user_thread is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user["email"] != user_thread.user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    message = body.message
+    response = model_graph.respond(message, thread_id)
+    return MessageResponse(response=response)

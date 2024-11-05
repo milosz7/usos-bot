@@ -5,11 +5,10 @@ from pydantic import BaseModel
 
 class UserThread(SQLModel, table=True):
     user_id: str = Field(primary_key=True, max_length=128)
-    thread_id: UUID = Field(primary_key=True)
+    thread_id: str = Field(primary_key=True)
 
 
 class MessageRequest(BaseModel):
-    thread_id: str
     message: str
 
 
@@ -18,4 +17,4 @@ class MessageResponse(BaseModel):
 
 
 class ThreadIDResponse(BaseModel):
-    thread_id: UUID
+    thread_id: str
