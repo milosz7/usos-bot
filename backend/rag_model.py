@@ -33,9 +33,11 @@ class RAGModel:
         llm = ChatGroq(model="llama-3.1-70b-versatile", temperature=0)
 
         print("Loading embeddings...")
-        embeddings = HuggingFaceEmbeddings(model_name="jinaai/jina-embeddings-v3",
-                                           model_kwargs={"trust_remote_code": True},
-                                           encode_kwargs={"task": "retrieval.query"})
+        embeddings = HuggingFaceEmbeddings(
+            model_name="jinaai/jina-embeddings-v3",
+            model_kwargs={"trust_remote_code": True},
+            encode_kwargs={"task": "retrieval.query"},
+        )
 
         print("Loading vector store...")
         pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
@@ -86,7 +88,9 @@ class RAGModel:
         )
         question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
 
-        rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+        rag_chain = create_retrieval_chain(
+            history_aware_retriever, question_answer_chain
+        )
 
         def call_model(state: State):
             response = rag_chain.invoke(state)
@@ -118,11 +122,29 @@ class RAGModel:
         config = self._get_config(thread_id)
         checkpoint = self.checkpointer.get(config)
         chat_history = checkpoint["channel_values"]["chat_history"]
-        chat_history = [{"author": "human" if isinstance(msg, HumanMessage) else "ai", "content": msg.content}
-                        for msg in chat_history
-                        ]
+        chat_history = [
+            {
+                "author": "human" if isinstance(msg, HumanMessage) else "ai",
+                "content": msg.content,
+            }
+            for msg in chat_history
+        ]
 
         return chat_history
+
+    def get_thread_caption(self, thread_id):
+        config = self._get_config(thread_id)
+        checkpoint = self.checkpointer.get(config)
+        chat_history = checkpoint["channel_values"]["chat_history"]
+
+        first_message = chat_history[0] if chat_history else None
+        if first_message:
+            first_message = {
+                "author": "human" if isinstance(first_message, HumanMessage) else "ai",
+                "content": first_message.content,
+            }
+
+        return first_message
 
     def respond(self, message, thread_id):
         config = self._get_config(thread_id)

@@ -46,12 +46,3 @@ templates = Jinja2Templates(directory="frontend/templates")
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return RedirectResponse(url="/static/icons/favicon.ico")
-
-
-@app.get("/")
-def index(request: Request):
-    user = request.session.get("user")
-    if user:
-        return templates.TemplateResponse(name="index.html", context={"request": request, "user": user})
-
-    return templates.TemplateResponse(name="login.html", context={"request": request})

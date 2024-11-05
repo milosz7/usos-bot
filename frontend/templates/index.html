@@ -12,14 +12,13 @@
     <div id="sidebar" class="w-64 bg-gray-800 text-white flex flex-col p-4 hidden flex">
         <h2 class="text-xl font-bold mb-4">Historia</h2>
         <div class="flex flex-col overflow-y-auto space-y-2">
-            <!-- Chat History items -->
-            <button class="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 focus:outline-none">
-                Chat #1
+
+            {% for caption in captions %}
+            <button onclick="window.location.href='/chat/{{caption.thread_id}}';" class="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 focus:outline-none">
+                {{caption.caption}}
             </button>
-            <button class="bg-gray-700 p-3 rounded-lg hover:bg-gray-600 focus:outline-none">
-                Chat #2
-            </button>
-            <!-- Add more chat history buttons here -->
+            {% endfor %}
+
         </div>
     </div>
 

@@ -16,6 +16,36 @@ model_graph = RAGModel()
 templates = Jinja2Templates(directory="frontend/templates")
 
 
+def getChatsCaption(session: SessionDep, user):
+    user_threads = session.exec(
+        select(UserThread.thread_id).where(user["email"] == UserThread.user_id)
+    ).all()
+
+    captions = [
+        {
+            "caption": (content[:9] + "..." if len(content) > 12 else content),
+            "thread_id": thread_id,
+        }
+        for thread_id in user_threads
+        if (content := model_graph.get_thread_caption(thread_id)["content"])
+    ]
+
+    return captions
+
+
+@router.get("/")
+def index(request: Request, session: SessionDep):
+    user = request.session.get("user")
+    if user:
+        captions = getChatsCaption(session, user)
+        return templates.TemplateResponse(
+            name="index.html",
+            context={"request": request, "user": user, "captions": captions},
+        )
+
+    return templates.TemplateResponse(name="login.html", context={"request": request})
+
+
 @router.post("/chat")
 async def chat(request: Request, session: SessionDep, body: MessageRequest):
     user = request.session.get("user")
@@ -55,10 +85,11 @@ async def get_chat(request: Request, session: SessionDep, thread_id: str):
         )
 
     history = model_graph.get_thread(thread_id)
+    captions = getChatsCaption(session, user)
 
     return templates.TemplateResponse(
         name="index.html",
-        context={"request": request, "messages": history, "user": user},
+        context={"request": request, "messages": history, "user": user, "captions": captions},
     )
 
 
