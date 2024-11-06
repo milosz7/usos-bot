@@ -1,5 +1,8 @@
 // static/js/script.js
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 if(document.getElementById("chatForm")) {
     const url = window.location;
@@ -9,16 +12,68 @@ if(document.getElementById("chatForm")) {
             event.preventDefault();
             const userInput = document.getElementById("userInput");
             const message = userInput.value
+            userInput.disabled = true;
 
             if (userInput.value.trim()) {
                 addUserMessage(message);
+                createAnimation();
                 // Clear input field
                 userInput.value = "";
 
-                createAnimation()
+                if (!message.trim()) return;
 
-                const bot_message = await getMessage(message, thread_id);
-                addBotMessage(bot_message);
+                try {
+                    const response = await fetch(`/chat/${thread_id}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ message: message, thread_id: thread_id })
+                    });
+
+                    if (!response.ok) {
+                        apendBotMessage("Error occurred.");
+                        userInput.disabled = false;
+                        return;
+                    }
+                } catch (error) {
+                    apendBotMessage("Unable to connect.");
+                    userInput.disabled = false;
+                    return;
+                }
+
+                let chunkResponse;
+
+                do {
+                    try {
+                        const response = await fetch(`/chat/next/${thread_id}`, {
+                            method: "GET",
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        });
+                        if (response.ok) {
+                            if (!chunkResponse) {
+                                deleteAnimation();
+                                addBotMessage("");
+                            }
+                            const data = await response.json();
+                            chunkResponse = data;
+                            apendBotMessage(chunkResponse.chunk);
+                        } else {
+                            apendBotMessage("Error occurred.");
+                            userInput.disabled = false;
+                            return;
+                        }
+                    } catch (error) {
+                        apendBotMessage("Unable to connect.");
+                        userInput.disabled = false;
+                        return;
+                    }
+                    await sleep(150);
+                } while (!chunkResponse.is_finished)
+
+                userInput.disabled = false;
             }
         });
 }
@@ -42,6 +97,7 @@ if (document.getElementById("initChat")) {
         });
 }
 
+// TODO: Fixed animation chat box size
 const textToAnimate = [".", "..", "..."]; // The sequence of dots
 let index = 0; // Keeps track of the current dot sequence
 let interval;
@@ -153,6 +209,15 @@ function addBotMessage(text) {
         <div class="bg-gray-700 p-3 rounded-lg inline-block text-white">${text}</div>
     `;
     chatWindow.appendChild(botMessage);
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function apendBotMessage(text) {
+    const chatWindow = document.getElementById("chatWindow");
+    const lastChild = chatWindow.lastElementChild;
+    const chatText = lastChild.lastElementChild;
+    chatText.innerHTML = chatText.innerHTML + text;
 
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }

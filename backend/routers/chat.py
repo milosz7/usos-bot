@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
+from sqlalchemy.testing.suite.test_reflection import metadata
+
 from backend.rag_model import RAGModel
 from backend.models import MessageRequest, MessageResponse, UserThread, ChunkResponse
 from typing import Annotated
@@ -96,28 +98,35 @@ async def get_chat(request: Request, session: SessionDep, thread_id: str):
 
     return templates.TemplateResponse(
         name="index.html",
-        context={"request": request, "messages": history, "user": user, "captions": captions},
+        context={
+            "request": request,
+            "messages": history,
+            "user": user,
+            "captions": captions,
+        },
     )
 
+
 @router.get("/chat/next/{thread_id}", response_model=ChunkResponse)
-def get_next_chunk(request: Request, session: SessionDep, thread_id: str):
+async def get_next_chunk(request: Request, session: SessionDep, thread_id: str):
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     user_stream = streams[thread_id]
-    msg, metadata = next(user_stream)
+    chunk = next(user_stream)
+    msg, metadata = chunk
 
     if "finish_reason" in msg.response_metadata:
-        while True:
-            try:
-                next(user_stream)
-            except StopIteration:
-                break
+        print(msg.response_metadata["finish_reason"])
+        for msg, _ in user_stream:
+            print(msg.content, type(msg), "=" * 10)
+            pass
 
+        del streams[thread_id]
         return ChunkResponse(chunk="", is_finished=True)
 
-    return ChunkResponse(chunk=msg, is_finished=False)
+    return ChunkResponse(chunk=msg.content, is_finished=False)
 
 
 @router.post("/chat/{thread_id}", response_model=MessageResponse)

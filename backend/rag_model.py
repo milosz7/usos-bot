@@ -30,7 +30,7 @@ def extract_text_from_retrieval(docs: list[Document]):
 
 class RAGModel:
     def __init__(self):
-        llm = ChatGroq(model="llama-3.1-70b-versatile", temperature=0)
+        llm = ChatGroq(model="llama-3.1-70b-versatile", temperature=0, streaming=True)
 
         print("Loading embeddings...")
         embeddings = HuggingFaceEmbeddings(
@@ -153,6 +153,12 @@ class RAGModel:
 
     def respond_stream(self, message, thread_id):
         config = self._get_config(thread_id)
-        stream = self.app.stream(dict(input=message), config=config, stream_mode="messages")
-        next(stream)
+        stream = self.app.stream(
+            dict(input=message), config=config, stream_mode="messages"
+        )
+        # TODO: Rewrite the RAG pipeline so this is not necessary. (one streaming, one synchronous)
+        for msg, _ in stream:
+            if "finish_reason" in msg.response_metadata:
+                break
+            pass
         return stream
