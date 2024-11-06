@@ -16,7 +16,7 @@ model_graph = RAGModel()
 templates = Jinja2Templates(directory="frontend/templates")
 
 
-def getChatsCaption(session: SessionDep, user):
+def get_chats_caption(session: SessionDep, user):
     user_threads = session.exec(
         select(UserThread.thread_id).where(user["email"] == UserThread.user_id)
     ).all()
@@ -37,7 +37,7 @@ def getChatsCaption(session: SessionDep, user):
 def index(request: Request, session: SessionDep):
     user = request.session.get("user")
     if user:
-        captions = getChatsCaption(session, user)
+        captions = get_chats_caption(session, user)
         return templates.TemplateResponse(
             name="index.html",
             context={"request": request, "user": user, "captions": captions},
@@ -85,7 +85,7 @@ async def get_chat(request: Request, session: SessionDep, thread_id: str):
         )
 
     history = model_graph.get_thread(thread_id)
-    captions = getChatsCaption(session, user)
+    captions = get_chats_caption(session, user)
 
     return templates.TemplateResponse(
         name="index.html",
