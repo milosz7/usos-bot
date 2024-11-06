@@ -18,3 +18,8 @@ class MessageResponse(BaseModel):
 
 class ThreadIDResponse(BaseModel):
     thread_id: str
+
+
+class ChunkResponse(BaseModel):
+    chunk: str
+    is_finished: bool

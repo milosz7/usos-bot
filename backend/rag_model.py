@@ -150,3 +150,9 @@ class RAGModel:
         config = self._get_config(thread_id)
         result = self.app.invoke(dict(input=message), config=config)
         return result["answer"]
+
+    def respond_stream(self, message, thread_id):
+        config = self._get_config(thread_id)
+        stream = self.app.stream(dict(input=message), config=config, stream_mode="messages")
+        next(stream)
+        return stream

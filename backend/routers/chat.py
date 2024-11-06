@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from backend.rag_model import RAGModel
-from ..models import MessageRequest, MessageResponse, UserThread
+from backend.models import MessageRequest, MessageResponse, UserThread, ChunkResponse
 from typing import Annotated
 from fastapi import Depends
 from backend.db.helpers import get_session
@@ -14,6 +14,8 @@ SessionDep = Annotated[Session, Depends(get_session)]
 router = APIRouter()
 model_graph = RAGModel()
 templates = Jinja2Templates(directory="frontend/templates")
+
+streams = {}
 
 
 def get_chats_caption(session: SessionDep, user):
@@ -53,11 +55,16 @@ async def chat(request: Request, session: SessionDep, body: MessageRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     thread_id = str(uuid4())
-    new_thread = UserThread(user_id=user["email"], thread_id=thread_id)
-    session.add(new_thread)
-    session.commit()
-    session.refresh(new_thread)
-    model_graph.respond(body.message, thread_id)
+    try:
+        # TODO: improve graph db cleanup
+        model_graph.respond(body.message, thread_id)
+        new_thread = UserThread(user_id=user["email"], thread_id=thread_id)
+        session.add(new_thread)
+        session.commit()
+        session.refresh(new_thread)
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     return {"response": thread_id}
 
@@ -92,6 +99,26 @@ async def get_chat(request: Request, session: SessionDep, thread_id: str):
         context={"request": request, "messages": history, "user": user, "captions": captions},
     )
 
+@router.get("/chat/next/{thread_id}", response_model=ChunkResponse)
+def get_next_chunk(request: Request, session: SessionDep, thread_id: str):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
+    user_stream = streams[thread_id]
+    msg, metadata = next(user_stream)
+
+    if "finish_reason" in msg.response_metadata:
+        while True:
+            try:
+                next(user_stream)
+            except StopIteration:
+                break
+
+        return ChunkResponse(chunk="", is_finished=True)
+
+    return ChunkResponse(chunk=msg, is_finished=False)
+
 
 @router.post("/chat/{thread_id}", response_model=MessageResponse)
 def ask_model(
@@ -112,5 +139,7 @@ def ask_model(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
     message = body.message
-    response = model_graph.respond(message, thread_id)
-    return MessageResponse(response=response)
+    stream = model_graph.respond_stream(message, thread_id)
+    streams[thread_id] = stream
+    # response = model_graph.respond(message, thread_id)
+    return MessageResponse(response="")
