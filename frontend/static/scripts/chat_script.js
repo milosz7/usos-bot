@@ -89,7 +89,7 @@ if (document.getElementById("initChat")) {
                 // Clear input field
                 userInput.value = "";
 
-                createAnimation()
+                addBotAnimationMessage()
 
                 const bot_message = await initChat(message)
                 addBotMessage(bot_message)
