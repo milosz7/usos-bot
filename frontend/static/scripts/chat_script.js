@@ -16,7 +16,7 @@ if(document.getElementById("chatForm")) {
 
             if (userInput.value.trim()) {
                 addUserMessage(message);
-                createAnimation();
+                addBotAnimationMessage();
                 // Clear input field
                 userInput.value = "";
 
@@ -97,17 +97,6 @@ if (document.getElementById("initChat")) {
         });
 }
 
-// TODO: Fixed animation chat box size
-const textToAnimate = [".", "..", "..."]; // The sequence of dots
-let index = 0; // Keeps track of the current dot sequence
-let interval;
-
-function startAnimation(writingElement) {
-    interval = setInterval(() => {
-    writingElement.textContent = textToAnimate[index];
-    index = (index + 1) % textToAnimate.length; // Cycle through the dots
-    }, 350); // Change dot every 500ms
-}
 
 function deleteAnimation() {
     const animation = document.getElementById("writingAnimation")
@@ -117,20 +106,18 @@ function deleteAnimation() {
     index = 0;
 }
 
-function createAnimation() {
-    addBotAnimationMessage()
-    const writingElement = document.getElementById("writingAnimation");
-    startAnimation(writingElement)
-}
-
 function addBotAnimationMessage() {
     const chatWindow = document.getElementById("chatWindow");
 
     const botMessage = document.createElement("div");
-    botMessage.className = "mb-4";
+    botMessage.className = "mb-4 w-20";
     botMessage.innerHTML = `
         <p class="text-gray-500 text-sm">UsosBot</p>
-        <div id="writingAnimation" class="bg-gray-700 p-3 rounded-lg inline-block text-white"></div>
+        <div id="writingAnimation" class="bg-gray-700 h-12 px-4 rounded-lg flex items-center gap-1">
+         <div class="h-3 w-3 rounded-full bg-gray-500 animate-dot1"></div>
+         <div class="h-3 w-3 rounded-full bg-gray-500 animate-dot2"></div>
+         <div class="h-3 w-3 rounded-full bg-gray-500 animate-dot3"></div>
+        </div>
     `;
     chatWindow.appendChild(botMessage);
 
@@ -153,29 +140,6 @@ async function initChat(text) {
         if (response.ok) {
             const data = await response.json();
             window.location.href = `/chat/${data.response}`
-        } else {
-            return "Error occurred."
-        }
-    } catch (error) {
-        return "Unable to connect."
-    }
-}
-
-async function getMessage(text, thread_id) {
-    if (!text.trim()) return;
-
-    try {
-            const response = await fetch("/chat/" + thread_id, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ message: text, thread_id: thread_id })
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            return data.response;
         } else {
             return "Error occurred."
         }
