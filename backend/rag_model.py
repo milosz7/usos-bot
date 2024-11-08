@@ -71,7 +71,8 @@ class RAGModel:
         system_prompt = (
             "You are an assistant for question-answering tasks. "
             "Use the following pieces of retrieved context to answer "
-            "the question. If you don't know the answer, say that you "
+            "the question. If you don't know the answer,"
+            "based on the provided context say that you "
             "don't know. Keep the answer concise."
             "Always output only the final answer."
             "Always answer in polish language."
