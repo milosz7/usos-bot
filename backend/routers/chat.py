@@ -22,7 +22,9 @@ streams = {}
 
 def get_chats_caption(session: SessionDep, user):
     user_threads = session.exec(
-        select(UserThread.thread_id).where(user["email"] == UserThread.user_id)
+        select(UserThread.thread_id)
+        .where(user["email"] == UserThread.user_id)
+        .order_by(UserThread.create_date.desc())
     ).all()
 
     captions = [
