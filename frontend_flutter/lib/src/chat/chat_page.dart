@@ -54,7 +54,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    var maxWidth = MediaQuery.of(context).size.width * 0.8;
+    var screenWidth = MediaQuery.of(context).size.width;
     const inputHeight = 50.0;
     const drawerHeaderHeight = 75.0;
 
@@ -72,7 +72,7 @@ class _ChatPageState extends State<ChatPage> {
             ChatWindow(
                 currentChatHistory: currentChatHistory,
                 theme: theme,
-                maxWidth: maxWidth),
+                screenWidth: screenWidth),
             const SizedBox(
               height: inputHeight,
               child: Placeholder(),

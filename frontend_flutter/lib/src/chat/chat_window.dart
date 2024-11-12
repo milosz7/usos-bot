@@ -7,19 +7,19 @@ class ChatWindow extends StatelessWidget {
     super.key,
     required this.currentChatHistory,
     required this.theme,
-    required this.maxWidth,
+    required this.screenWidth,
   });
 
   final List<ChatMessage> currentChatHistory;
   final ThemeData theme;
-  final double maxWidth;
+  final double screenWidth;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: ListView(children: [
         for (var chat in currentChatHistory)
-          ChatMessageBox(chat: chat, theme: theme, maxWidth: maxWidth)
+          ChatMessageBox(chat: chat, theme: theme, screenWidth: screenWidth)
       ]),
     );
   }
@@ -30,21 +30,23 @@ class ChatMessageBox extends StatelessWidget {
     super.key,
     required this.chat,
     required this.theme,
-    required this.maxWidth,
+    required this.screenWidth,
   });
 
   final ChatMessage chat;
   final ThemeData theme;
-  final double maxWidth;
+  final double screenWidth;
   final String aiPlaceholder = "UsosBot";
   final String humanPlaceholder = "Ty";
+  final double maxWidthMobileDevices = 600.0;
 
   @override
   Widget build(BuildContext context) {
+    var maxMessageWidth = screenWidth * 0.8;
     return SelectionArea(
       // TO DO: change cursor on text
       child: ListTile(
-          contentPadding: const EdgeInsets.all(PaddingSize.small),
+          contentPadding: EdgeInsets.all(screenWidth >= maxWidthMobileDevices ? PaddingSize.large : PaddingSize.small),
           title: Row(
             mainAxisAlignment: chat.author == MessageAuthor.ai
                 ? MainAxisAlignment.start
@@ -64,7 +66,7 @@ class ChatMessageBox extends StatelessWidget {
                         fontSize: FontSize.small),
                   ),
                   Container(
-                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    constraints: BoxConstraints(maxWidth: maxMessageWidth),
                     child: Card(
                       margin: const EdgeInsets.all(0),
                       color: theme.colorScheme.primary,
@@ -72,7 +74,7 @@ class ChatMessageBox extends StatelessWidget {
                         padding: const EdgeInsets.all(PaddingSize.medium),
                         child: Text(
                           chat.content,
-                          style: TextStyle(color: theme.colorScheme.onPrimary),
+                          style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: screenWidth >= maxWidthMobileDevices ? FontSize.large : FontSize.small),
                           softWrap: true,
                         ),
                       ),
