@@ -41,44 +41,47 @@ class ChatMessageBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-        contentPadding: const EdgeInsets.all(PaddingSize.small),
-        title: Row(
-          mainAxisAlignment: chat.author == MessageAuthor.ai
-              ? MainAxisAlignment.start
-              : MainAxisAlignment.end,
-          children: [
-            Column(
-              crossAxisAlignment: chat.author == MessageAuthor.ai
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.end,
-              children: [
-                Text(
-                  chat.author == MessageAuthor.ai
-                      ? aiPlaceholder
-                      : humanPlaceholder,
-                  style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: FontSize.small),
-                ),
-                Container(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: Card(
-                    margin: const EdgeInsets.all(0),
-                    color: theme.colorScheme.primary,
-                    child: Padding(
-                      padding: const EdgeInsets.all(PaddingSize.medium),
-                      child: Text(
-                        chat.content,
-                        style: TextStyle(color: theme.colorScheme.onPrimary),
-                        softWrap: true,
+    return SelectionArea(
+      // TO DO: change cursor on text
+      child: ListTile(
+          contentPadding: const EdgeInsets.all(PaddingSize.small),
+          title: Row(
+            mainAxisAlignment: chat.author == MessageAuthor.ai
+                ? MainAxisAlignment.start
+                : MainAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: chat.author == MessageAuthor.ai
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    chat.author == MessageAuthor.ai
+                        ? aiPlaceholder
+                        : humanPlaceholder,
+                    style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: FontSize.small),
+                  ),
+                  Container(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    child: Card(
+                      margin: const EdgeInsets.all(0),
+                      color: theme.colorScheme.primary,
+                      child: Padding(
+                        padding: const EdgeInsets.all(PaddingSize.medium),
+                        child: Text(
+                          chat.content,
+                          style: TextStyle(color: theme.colorScheme.onPrimary),
+                          softWrap: true,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              ],
-            )
-          ],
-        ));
+                  )
+                ],
+              )
+            ],
+          )),
+    );
   }
 }
