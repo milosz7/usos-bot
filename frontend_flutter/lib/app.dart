@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/login_page.dart';
-import 'package:frontend_flutter/chat_page.dart';
+import 'package:frontend_flutter/src/chat/chat_page.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend_flutter/styles.dart';
 
