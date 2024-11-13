@@ -3,24 +3,35 @@ import 'package:frontend_flutter/styles.dart';
 import 'chat_state_dto.dart';
 
 class ChatWindow extends StatelessWidget {
-  const ChatWindow({
-    super.key,
-    required this.currentChatHistory,
-    required this.theme,
-    required this.screenWidth,
-  });
-
+  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> currentChatHistory;
   final ThemeData theme;
   final double screenWidth;
 
+  ChatWindow({
+    super.key,
+    required this.currentChatHistory,
+    required this.theme,
+    required this.screenWidth,
+  }) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200), curve: Curves.ease);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    var chatMessages = [
+      for (var chat in currentChatHistory)
+        ChatMessageBox(chat: chat, theme: theme, screenWidth: screenWidth)
+    ];
     return Expanded(
-      child: ListView(children: [
-        for (var chat in currentChatHistory)
-          ChatMessageBox(chat: chat, theme: theme, screenWidth: screenWidth)
-      ]),
+      child: ListView(controller: _scrollController, children: chatMessages),
     );
   }
 }
@@ -46,7 +57,9 @@ class ChatMessageBox extends StatelessWidget {
     return SelectionArea(
       // TO DO: change cursor on text
       child: ListTile(
-          contentPadding: EdgeInsets.all(screenWidth >= maxWidthMobileDevices ? PaddingSize.large : PaddingSize.small),
+          contentPadding: EdgeInsets.all(screenWidth >= maxWidthMobileDevices
+              ? PaddingSize.large
+              : PaddingSize.small),
           title: Row(
             mainAxisAlignment: chat.author == MessageAuthor.ai
                 ? MainAxisAlignment.start
@@ -74,7 +87,11 @@ class ChatMessageBox extends StatelessWidget {
                         padding: const EdgeInsets.all(PaddingSize.medium),
                         child: Text(
                           chat.content,
-                          style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: screenWidth >= maxWidthMobileDevices ? FontSize.large : FontSize.small),
+                          style: TextStyle(
+                              color: theme.colorScheme.onPrimary,
+                              fontSize: screenWidth >= maxWidthMobileDevices
+                                  ? FontSize.large
+                                  : FontSize.small),
                           softWrap: true,
                         ),
                       ),

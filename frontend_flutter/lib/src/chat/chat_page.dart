@@ -64,6 +64,7 @@ class _ChatPageState extends State<ChatPage> {
       }
 
       var input = _textController.text;
+      currentChatHistory.add(ChatMessage(MessageAuthor.human, input));
 
       print("User input: $input");
     });
@@ -91,74 +92,72 @@ class _ChatPageState extends State<ChatPage> {
                 theme: theme,
                 screenWidth: screenWidth),
             Material(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                child: Padding(
-                  padding: const EdgeInsets.all(PaddingSize.large),
-                  child: Form(
-                      key: _formKey,
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Column(
-                              children: [
-                              TextFormField(
-                                decoration: InputDecoration(
-                                  hintText: "Zadaj pytanie:",
-                                  errorStyle: const TextStyle(height: 0.01),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30.0),
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.primary,
-                                      width: 2.0,
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(30.0),
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.secondary,
-                                      width: 2.0,
-                                    ),
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              child: Padding(
+                padding: const EdgeInsets.all(PaddingSize.large),
+                child: Form(
+                    key: _formKey,
+                    child: Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: Column(children: [
+                            TextFormField(
+                              decoration: InputDecoration(
+                                hintText: "Zadaj pytanie:",
+                                errorStyle: const TextStyle(fontSize: 0),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.primary,
+                                    width: 2.0,
                                   ),
                                 ),
-                                controller: _textController,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "";
-                                  }
-                                  return null;
-                                },
-                                style: TextStyle(
-                                    color: theme.colorScheme.onPrimary),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(30.0),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.secondary,
+                                    width: 2.0,
+                                  ),
+                                ),
                               ),
-                            ]),
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.only(left: PaddingSize.large),
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                shadowColor: theme.colorScheme.secondary,
-                                elevation: 5,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 15),
-                              ),
-                              onPressed: _processSubmit,
-                              child: Text(
-                                "Wyślij",
-                                style: TextStyle(
-                                    color: theme.colorScheme.onPrimary,
-                                    fontSize:
-                                        screenWidth >= maxWidthMobileDevices
-                                            ? FontSize.large
-                                            : FontSize.small),
-                              ),
+                              controller: _textController,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return "";
+                                }
+                                return null;
+                              },
+                              style:
+                                  TextStyle(color: theme.colorScheme.onPrimary),
                             ),
-                          )
-                        ],
-                      )),
-                ),
+                          ]),
+                        ),
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(left: PaddingSize.large),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              shadowColor: theme.colorScheme.secondary,
+                              elevation: 5,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 15),
+                            ),
+                            onPressed: _processSubmit,
+                            child: Text(
+                              "Wyślij",
+                              style: TextStyle(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontSize: screenWidth >= maxWidthMobileDevices
+                                      ? FontSize.large
+                                      : FontSize.small),
+                            ),
+                          ),
+                        )
+                      ],
+                    )),
               ),
+            ),
           ],
         ),
         drawer: Drawer(
