@@ -55,15 +55,11 @@ class _ChatPageState extends State<ChatPage> {
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _textController = TextEditingController();
-  String _errorText = "";
   final double maxWidthMobileDevices = 600.0;
 
   void _processSubmit() {
     setState(() {
-      var validation = _formKey.currentState?.validate();
-      _errorText = validation == true ? "" : "Prosze zadać pytanie";
-
-      if (!validation!) {
+      if (!_formKey.currentState!.validate()) {
         return;
       }
 
@@ -77,7 +73,6 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var screenWidth = MediaQuery.of(context).size.width;
-    const inputHeight = 125.0;
     const drawerHeaderHeight = 75.0;
 
     return Scaffold(
@@ -95,32 +90,21 @@ class _ChatPageState extends State<ChatPage> {
                 currentChatHistory: currentChatHistory,
                 theme: theme,
                 screenWidth: screenWidth),
-            SizedBox(
-              height: inputHeight,
-              child: Material(
+            Material(
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: PaddingSize.medium),
+                  padding: const EdgeInsets.all(PaddingSize.large),
                   child: Form(
                       key: _formKey,
                       child: Row(
                         children: <Widget>[
                           Expanded(
-                            child: Column(children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: PaddingSize.medium),
-                                child: Text(
-                                  _errorText,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.error,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
+                            child: Column(
+                              children: [
                               TextFormField(
                                 decoration: InputDecoration(
+                                  hintText: "Zadaj pytanie:",
+                                  errorStyle: const TextStyle(height: 0.01),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30.0),
                                     borderSide: BorderSide(
@@ -175,7 +159,6 @@ class _ChatPageState extends State<ChatPage> {
                       )),
                 ),
               ),
-            )
           ],
         ),
         drawer: Drawer(
