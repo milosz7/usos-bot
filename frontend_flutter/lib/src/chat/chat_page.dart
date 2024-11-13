@@ -100,67 +100,79 @@ class _ChatPageState extends State<ChatPage> {
               child: Material(
                 color: theme.colorScheme.primary.withOpacity(0.1),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: PaddingSize.medium),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: PaddingSize.medium),
                   child: Form(
-                    key: _formKey,
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            children: [
+                      key: _formKey,
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(children: [
                               Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: PaddingSize.medium),
-                                  child: Text(
-                                    _errorText,
-                                    style: TextStyle(
-                                      color: theme.colorScheme.error,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),        
-                              TextFormField(
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(30.0),
-                                  borderSide: BorderSide(
-                                    color: theme.colorScheme.primary,
-                                    width: 2.0,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(30.0),
-                                  borderSide: BorderSide(
-                                    color: theme.colorScheme.secondary,
-                                    width: 2.0,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: PaddingSize.medium),
+                                child: Text(
+                                  _errorText,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.error,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
-                              controller: _textController,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return "";
-                                }
-                                return null;
-                              },
-                            ),
-                          ]),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: PaddingSize.large),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              shadowColor: theme.colorScheme.secondary,
-                              elevation: 5,
-                              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                            ),
-                            onPressed: _processSubmit,
-                            child: Text("Wyślij", style: TextStyle(color: theme.colorScheme.onPrimary, fontSize: screenWidth >= maxWidthMobileDevices ? FontSize.large : FontSize.small),),
+                              TextFormField(
+                                decoration: InputDecoration(
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    borderSide: BorderSide(
+                                      color: theme.colorScheme.primary,
+                                      width: 2.0,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                    borderSide: BorderSide(
+                                      color: theme.colorScheme.secondary,
+                                      width: 2.0,
+                                    ),
+                                  ),
+                                ),
+                                controller: _textController,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "";
+                                  }
+                                  return null;
+                                },
+                                style: TextStyle(
+                                    color: theme.colorScheme.onPrimary),
+                              ),
+                            ]),
                           ),
-                        )
-                      ],
-                    )
-                  ),
+                          Padding(
+                            padding:
+                                const EdgeInsets.only(left: PaddingSize.large),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.colorScheme.primary,
+                                shadowColor: theme.colorScheme.secondary,
+                                elevation: 5,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 30, vertical: 15),
+                              ),
+                              onPressed: _processSubmit,
+                              child: Text(
+                                "Wyślij",
+                                style: TextStyle(
+                                    color: theme.colorScheme.onPrimary,
+                                    fontSize:
+                                        screenWidth >= maxWidthMobileDevices
+                                            ? FontSize.large
+                                            : FontSize.small),
+                              ),
+                            ),
+                          )
+                        ],
+                      )),
                 ),
               ),
             )
