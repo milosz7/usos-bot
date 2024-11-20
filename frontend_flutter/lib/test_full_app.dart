@@ -5,75 +5,48 @@ import 'package:sign_in_button/sign_in_button.dart';
 import 'package:frontend_flutter/styles.dart';
 import 'package:frontend_flutter/src/chat/chat_state_dto.dart';
 import 'package:frontend_flutter/src/chat/chat_window.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class FullPage extends StatefulWidget {
   const FullPage({super.key});
-
   @override
   State<FullPage> createState() => _FullPage();
 }
 
 class _FullPage extends State<FullPage> {
+  final _baseUri = "http://localhost:8000";
   var _currentIndex = 0;
-  var historyCaptions = <HistoryCaption>[
-    HistoryCaption("Chat 1", "1"),
-    HistoryCaption("Chat 2", "2"),
-    HistoryCaption("Chat 3", "3"),
-  ];
-
-  var currentChatHistory = <ChatMessage>[
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human,
-        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc,"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-    ChatMessage(MessageAuthor.human, "Hello"),
-    ChatMessage(MessageAuthor.ai, "Hi"),
-  ];
-
-  void _fetchCurrentChatHistory(String id) {
-    currentChatHistory[0].content = id;
-  }
-
-  void _changeIndex(int selectedIndex) {
-    _fetchCurrentChatHistory(historyCaptions[selectedIndex].uuid);
-    setState(() {
-      _currentIndex = selectedIndex;
-    });
-  }
+  var historyCaptions = <HistoryCaption>[];
+  var currentChatHistory = <ChatMessage>[];
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _textController = TextEditingController();
   final double maxWidthMobileDevices = 600.0;
+
+  User? _currentUser;
+
+  void _changeIndex(int selectedIndex) {
+    _fetchChatHistory(historyCaptions[selectedIndex].uuid)
+        .then((List<ChatMessage> currentChatResponse) => {
+              setState(() {
+                currentChatHistory = currentChatResponse;
+              })
+            });
+    setState(() {
+      _currentIndex = selectedIndex;
+    });
+  }
 
   void _processSubmit() {
     setState(() {
       if (!_formKey.currentState!.validate()) {
         return;
       }
-
       var input = _textController.text;
-      currentChatHistory.add(ChatMessage(MessageAuthor.human, input));
-
-      print("User input: $input");
+      currentChatHistory.add(ChatMessage("human", input));
     });
   }
-
-  User? _currentUser;
 
   @override
   void initState() {
@@ -81,6 +54,13 @@ class _FullPage extends State<FullPage> {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       setState(() {
         _currentUser = user;
+        if (_currentUser != null) {
+          _fetchChatCaptions().then((List<HistoryCaption> captions) => {
+                setState(() {
+                  historyCaptions = captions;
+                })
+              });
+        }
       });
     });
   }
@@ -89,20 +69,72 @@ class _FullPage extends State<FullPage> {
     await FirebaseAuth.instance.signOut();
   }
 
+  Future<String?> _getIdTokenWithRefresh() async {
+    return _currentUser!.getIdToken(true);
+  }
+
+  Future<List<HistoryCaption>> _fetchChatCaptions() async {
+    try {
+      var idToken = await _getIdTokenWithRefresh();
+      final response =
+          await http.get(Uri.parse("$_baseUri/chat/captions"), headers: {
+        "Authorization": "Bearer $idToken",
+      });
+
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        List<dynamic> jsonList = json.decode(responseBody);
+        List<HistoryCaption> captionsResponse = jsonList.map((jsonItem) {
+          return HistoryCaption.fromJson(jsonItem);
+        }).toList();
+        return captionsResponse;
+      } else {
+        print(
+            "Failed to authenticate with server. Status: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("Error 1: $error");
+    }
+    return [];
+  }
+
+  Future<List<ChatMessage>> _fetchChatHistory(String threadId) async {
+    try {
+      var idToken = await _getIdTokenWithRefresh();
+      final response =
+          await http.get(Uri.parse("$_baseUri/chat/$threadId"), headers: {
+        "Authorization": "Bearer $idToken",
+      });
+
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        List<dynamic> jsonList = json.decode(responseBody);
+        List<ChatMessage> currentChatResponse = jsonList.map((jsonItem) {
+          return ChatMessage.fromJson(jsonItem);
+        }).toList();
+        return currentChatResponse;
+      } else {
+        print(
+            "Failed to authenticate with server. Status: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("Error 2: $error");
+    }
+    return [];
+  }
+
   Future<void> _handleSignIn() async {
     try {
       FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
     } catch (error) {
-      print(error);
+      print("Error 3: $error");
     }
   }
 
   Widget _loadImage(String url) {
-    try {
-      return Image.network(url);
-    } catch (_) {
+    return Image.network(url, errorBuilder: (context, exception, stackTrace) {
       return const Placeholder();
-    }
+    });
   }
 
   Widget _buildBody(BuildContext context) {
@@ -152,7 +184,7 @@ class _FullPage extends State<FullPage> {
                             child: Column(children: [
                               TextFormField(
                                 decoration: InputDecoration(
-                                  hintText: "Zadaj pytanie:",
+                                  hintText: "Zadaj pytanie",
                                   errorStyle: const TextStyle(fontSize: 0),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30.0),

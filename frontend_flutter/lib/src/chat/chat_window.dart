@@ -61,19 +61,17 @@ class ChatMessageBox extends StatelessWidget {
               ? PaddingSize.large
               : PaddingSize.small),
           title: Row(
-            mainAxisAlignment: chat.author == MessageAuthor.ai
+            mainAxisAlignment: chat.author == "ai"
                 ? MainAxisAlignment.start
                 : MainAxisAlignment.end,
             children: [
               Column(
-                crossAxisAlignment: chat.author == MessageAuthor.ai
+                crossAxisAlignment: chat.author == "ai"
                     ? CrossAxisAlignment.start
                     : CrossAxisAlignment.end,
                 children: [
                   Text(
-                    chat.author == MessageAuthor.ai
-                        ? aiPlaceholder
-                        : humanPlaceholder,
+                    chat.author == "ai" ? aiPlaceholder : humanPlaceholder,
                     style: TextStyle(
                         color: theme.colorScheme.onSurface,
                         fontSize: FontSize.small),
