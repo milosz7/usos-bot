@@ -58,3 +58,11 @@ GoogleService-Info.plist
 firebase.json
 firebase_options.dart
 ```
+
+### FastApi Firebase
+
+1. Do all the steps in the previous point.
+2. Enter [Firebase Service Account](https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk)
+3. Select previously created project
+4. Generate new private key
+5. Copy content of the downloaded file to the "usos-bot-firebase-adminsdk.json" file

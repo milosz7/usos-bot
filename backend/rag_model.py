@@ -141,7 +141,7 @@ class RAGModel:
         first_message = chat_history[0] if chat_history else None
         if first_message:
             first_message = {
-                "author": "human" if isinstance(first_message, HumanMessage) else "ai",
+                "author": "human",
                 "content": first_message.content,
             }
 
@@ -162,4 +162,12 @@ class RAGModel:
             if "finish_reason" in msg.response_metadata:
                 break
             pass
+        return stream
+
+    def init_respond_stream(self, message, thread_id):
+        config = self._get_config(thread_id)
+        stream = self.app.stream(
+            dict(input=message), config=config, stream_mode="messages"
+        )
+
         return stream

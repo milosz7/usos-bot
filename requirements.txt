@@ -29,3 +29,4 @@ starlette-session==0.4.3
 psycopg[pool]
 langgraph-checkpoint-postgres==2.0.2
 sqlmodel==0.0.22
+firebase-admin==6.6.0
