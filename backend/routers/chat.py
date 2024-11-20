@@ -5,7 +5,15 @@ from fastapi import Depends
 from backend.db.helpers import get_session
 from sqlmodel import Session, select
 from backend.auth import verify_token
-from backend.models import MessageRequest, UserThread, ChunkResponse
+from backend.models import (
+    MessageRequest,
+    UserThread,
+    ChunkResponse,
+    CaptionResponse,
+    HistoryResponse,
+    ThreadIdResponse,
+)
+from typing import List
 from uuid import uuid4
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -16,7 +24,7 @@ model_graph = RAGModel()
 streams = {}
 
 
-@router.get("/chat/captions")
+@router.get("/chat/captions", response_model=List[CaptionResponse])
 async def get_captions(session: SessionDep, user=Depends(verify_token)):
     # noinspection PyTypeChecker
     user_threads = session.exec(
@@ -37,7 +45,7 @@ async def get_captions(session: SessionDep, user=Depends(verify_token)):
     return captions
 
 
-@router.get("/chat/{thread_id}")
+@router.get("/chat/{thread_id}", response_model=List[HistoryResponse])
 async def get_chat_history(
     session: SessionDep, thread_id: str, user=Depends(verify_token)
 ):
@@ -54,10 +62,10 @@ async def get_chat_history(
 
     history = model_graph.get_thread(thread_id)
 
-    return {"response": history}
+    return history
 
 
-@router.post("/chat")
+@router.post("/chat", response_model=ThreadIdResponse)
 async def init_chat(
     session: SessionDep, body: MessageRequest, user=Depends(verify_token)
 ):
@@ -76,7 +84,7 @@ async def init_chat(
         session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return {"response": thread_id}
+    return ThreadIdResponse(thread_id=thread_id)
 
 
 @router.post("/chat/{thread_id}")
@@ -104,7 +112,7 @@ async def ask_model(
     return
 
 
-@router.get("/chat/next/{thread_id}")
+@router.get("/chat/next/{thread_id}", response_model=ChunkResponse)
 async def get_message_chunk(
     session: SessionDep, thread_id: str, user=Depends(verify_token)
 ):
