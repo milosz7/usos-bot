@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
+import 'package:http/http.dart' as http;
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -43,6 +44,26 @@ class _SignInState extends State<SignIn> {
     }
   }
 
+  Future<void> _handleTestAuth() async {
+    try {
+      var idToken = await _currentUser!.getIdToken(true);
+      const String url = "http://localhost:8000/auth/test";
+
+      final response = await http.get(Uri.parse(url), headers: {
+        "Authorization": "Bearer $idToken",
+      });
+
+      if (response.statusCode == 200) {
+        print('Response from server: ${response.body}');
+      } else {
+        print(
+            'Failed to authenticate with server. Status: ${response.statusCode}');
+      }
+    } catch (error) {
+      print(error);
+    }
+  }
+
   Widget _loadImage(String url) {
     try {
       return Image.network(url);
@@ -71,6 +92,12 @@ class _SignInState extends State<SignIn> {
               ),
               onPressed: _handleGetToken,
               child: const Text("Get Token")),
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: _handleTestAuth,
+              child: const Text("Test Auth")),
           ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
