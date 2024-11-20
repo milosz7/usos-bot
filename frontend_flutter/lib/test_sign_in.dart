@@ -34,6 +34,15 @@ class _SignInState extends State<SignIn> {
     }
   }
 
+  Future<void> _handleGetToken() async {
+    try {
+      var idToken = await _currentUser!.getIdToken(true);
+      print(idToken);
+    } catch (error) {
+      print(error);
+    }
+  }
+
   Widget _loadImage(String url) {
     try {
       return Image.network(url);
@@ -56,6 +65,12 @@ class _SignInState extends State<SignIn> {
             title: Text(user.displayName ?? ''),
             subtitle: Text(user.email!),
           ),
+          ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: _handleGetToken,
+              child: const Text("Get Token")),
           ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
