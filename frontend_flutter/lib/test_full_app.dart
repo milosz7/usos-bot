@@ -28,6 +28,8 @@ class _FullPage extends State<FullPage> {
 
   User? _currentUser;
 
+  void logger(String error) {}
+
   void _changeIndex(int selectedIndex) {
     if (selectedIndex == 0) {
       setState(() {
@@ -58,39 +60,43 @@ class _FullPage extends State<FullPage> {
     });
 
     if (_currentIndex != 0) {
-      var thread_id = getCurrentThreadId();
-      _postAskModel(input, thread_id).then((bool response) {
-        if (response == true) {
-          print("Before processChunks");
-          processChunks(thread_id);
+      var threadId = getCurrentThreadId();
+      _postAskModel(input, threadId).then((bool response) {
+        if (response) {
+          processChunks(threadId);
+        }
+      });
+    } else {
+      _postInitChat(input).then((String? threadId) {
+        if (threadId != null) {
+          createNewHistoryCaption(input, threadId);
+          processChunks(threadId);
         }
       });
     }
   }
 
-  Future<void> processChunks(String thread_id) async {
+  void createNewHistoryCaption(String input, String threadId) {
+    setState(() {
+      historyCaptions.insert(0, HistoryCaption(input, threadId));
+      _currentIndex = 1;
+    });
+  }
+
+  Future<void> processChunks(String threadId) async {
     setState(() {
       _isFetching = true;
+      currentChatHistory.add(ChatMessage("ai", ""));
     });
 
     bool isFinished = false;
-
-    print("Start fetching");
-
     while (!isFinished) {
-      await _fetchNextChunk(thread_id).then((ChunkResponse? chunkResponse) {
+      await _fetchNextChunk(threadId).then((ChunkResponse? chunkResponse) {
         if (chunkResponse != null) {
-          print("Fetched: ${chunkResponse.chunk}");
-          if (currentChatHistory.last.author == "ai") {
-            setState(() {
-              currentChatHistory.last.content =
-                  currentChatHistory.last.content + chunkResponse.chunk;
-            });
-          } else {
-            setState(() {
-              currentChatHistory.add(ChatMessage("ai", chunkResponse.chunk));
-            });
-          }
+          setState(() {
+            currentChatHistory.last.content =
+                currentChatHistory.last.content + chunkResponse.chunk;
+          });
           isFinished = chunkResponse.is_finished;
         } else {
           isFinished = true;
@@ -98,11 +104,39 @@ class _FullPage extends State<FullPage> {
       });
     }
 
-    print("End fetching");
+    setState(() {
+      _isFetching = false;
+    });
   }
 
   String getCurrentThreadId() {
     return historyCaptions[_currentIndex - 1].uuid;
+  }
+
+  void showFlashError(BuildContext context, String message) {
+    ThemeData theme = Theme.of(context);
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        elevation: ElevationSize.max,
+        padding: const EdgeInsets.all(PaddingSize.large),
+        content:
+            Text(message, style: TextStyle(color: theme.colorScheme.onError)),
+        leading: Icon(Icons.error, color: theme.colorScheme.onError),
+        backgroundColor: theme.colorScheme.error,
+        actions: <Widget>[
+          TextButton(
+            style: TextButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary),
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+            child: Text(
+              "Zamknij",
+              style: TextStyle(color: theme.colorScheme.onPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -146,11 +180,18 @@ class _FullPage extends State<FullPage> {
         }).toList();
         return captionsResponse;
       } else {
-        print(
+        if (mounted) {
+          showFlashError(
+              context, "Błąd autoryzacji. Kod błędu: ${response.statusCode}");
+        }
+        logger(
             "Failed to authenticate with server. Status: ${response.statusCode}");
       }
     } catch (error) {
-      print("Error 1: $error");
+      if (mounted) {
+        showFlashError(context, 'Błąd serwera');
+      }
+      logger("Error 1: $error");
     }
     return [];
   }
@@ -171,11 +212,18 @@ class _FullPage extends State<FullPage> {
         }).toList();
         return currentChatResponse;
       } else {
-        print(
+        if (mounted) {
+          showFlashError(
+              context, "Błąd autoryzacji. Kod błędu: ${response.statusCode}");
+        }
+        logger(
             "Failed to authenticate with server. Status: ${response.statusCode}");
       }
     } catch (error) {
-      print("Error 2: $error");
+      if (mounted) {
+        showFlashError(context, 'Błąd serwera');
+      }
+      logger("Error 2: $error");
     }
     return [];
   }
@@ -194,11 +242,18 @@ class _FullPage extends State<FullPage> {
         ChunkResponse chunkResponse = ChunkResponse.fromJson(json);
         return chunkResponse;
       } else {
-        print(
+        if (mounted) {
+          showFlashError(
+              context, "Błąd autoryzacji. Kod błędu: ${response.statusCode}");
+        }
+        logger(
             "Failed to authenticate with server. Status: ${response.statusCode}");
       }
     } catch (error) {
-      print("Error 5: $error");
+      if (mounted) {
+        showFlashError(context, 'Błąd serwera');
+      }
+      logger("Error 5: $error");
     }
     return null;
   }
@@ -214,24 +269,64 @@ class _FullPage extends State<FullPage> {
           body: jsonEncode({"message": message}));
 
       if (response.statusCode == 200) {
-        print("thread_id: $thread_id");
         return true;
       } else {
-        print(
+        if (mounted) {
+          showFlashError(
+              context, "Błąd autoryzacji. Kod błędu: ${response.statusCode}");
+        }
+        logger(
             "Failed to authenticate with server. Status: ${response.statusCode}");
       }
     } catch (error) {
-      print("Error 4: $error");
+      if (mounted) {
+        showFlashError(context, 'Błąd serwera');
+      }
+      logger("Error 4: $error");
     }
 
     return false;
+  }
+
+  Future<String?> _postInitChat(String message) async {
+    try {
+      var idToken = await _getIdTokenWithRefresh();
+      final response = await http.post(Uri.parse("$_baseUri/chat/"),
+          headers: {
+            "Authorization": "Bearer $idToken",
+            "Content-Type": "application/json",
+          },
+          body: jsonEncode({"message": message}));
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+        final threadId = responseBody["thread_id"] as String;
+        return threadId;
+      } else {
+        if (mounted) {
+          showFlashError(
+              context, "Błąd autoryzacji. Kod błędu: ${response.statusCode}");
+        }
+        logger(
+            "Failed to authenticate with server. Status: ${response.statusCode}");
+      }
+    } catch (error) {
+      if (mounted) {
+        showFlashError(context, 'Błąd serwera');
+      }
+      logger("Error 4: $error");
+    }
+    return null;
   }
 
   Future<void> _handleSignIn() async {
     try {
       FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
     } catch (error) {
-      print("Error 3: $error");
+      if (mounted) {
+        showFlashError(context, 'Błąd serwera');
+      }
+      logger("Error 3: $error");
     }
   }
 
@@ -287,6 +382,7 @@ class _FullPage extends State<FullPage> {
                           Expanded(
                             child: Column(children: [
                               TextFormField(
+                                onFieldSubmitted: (_) => _processSubmit(),
                                 decoration: InputDecoration(
                                   hintText: "Zadaj pytanie",
                                   errorStyle: const TextStyle(fontSize: 0),

@@ -47,4 +47,5 @@ class ElevationSize {
   static const small = unit;
   static const medium = unit * 2;
   static const large = unit * 3;
+  static const max = 9999.0;
 }

@@ -24,6 +24,7 @@ model_graph = RAGModel()
 streams = {}
 
 
+# TODO: add database error handling
 @router.get("/chat/captions", response_model=List[CaptionResponse])
 async def get_captions(session: SessionDep, user=Depends(verify_token)):
     # noinspection PyTypeChecker
