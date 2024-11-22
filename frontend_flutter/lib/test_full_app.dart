@@ -24,10 +24,19 @@ class _FullPage extends State<FullPage> {
   final TextEditingController _textController = TextEditingController();
   final double maxWidthMobileDevices = 600.0;
 
+  bool _isFetching = false;
+
   User? _currentUser;
 
   void _changeIndex(int selectedIndex) {
-    _fetchChatHistory(historyCaptions[selectedIndex].uuid)
+    if (selectedIndex == 0) {
+      setState(() {
+        currentChatHistory.clear();
+        _currentIndex = selectedIndex;
+      });
+      return;
+    }
+    _fetchChatHistory(historyCaptions[selectedIndex - 1].uuid)
         .then((List<ChatMessage> currentChatResponse) => {
               setState(() {
                 currentChatHistory = currentChatResponse;
@@ -39,13 +48,61 @@ class _FullPage extends State<FullPage> {
   }
 
   void _processSubmit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    var input = _textController.text;
+    _textController.text = "";
     setState(() {
-      if (!_formKey.currentState!.validate()) {
-        return;
-      }
-      var input = _textController.text;
       currentChatHistory.add(ChatMessage("human", input));
     });
+
+    if (_currentIndex != 0) {
+      var thread_id = getCurrentThreadId();
+      _postAskModel(input, thread_id).then((bool response) {
+        if (response == true) {
+          print("Before processChunks");
+          processChunks(thread_id);
+        }
+      });
+    }
+  }
+
+  Future<void> processChunks(String thread_id) async {
+    setState(() {
+      _isFetching = true;
+    });
+
+    bool isFinished = false;
+
+    print("Start fetching");
+
+    while (!isFinished) {
+      await _fetchNextChunk(thread_id).then((ChunkResponse? chunkResponse) {
+        if (chunkResponse != null) {
+          print("Fetched: ${chunkResponse.chunk}");
+          if (currentChatHistory.last.author == "ai") {
+            setState(() {
+              currentChatHistory.last.content =
+                  currentChatHistory.last.content + chunkResponse.chunk;
+            });
+          } else {
+            setState(() {
+              currentChatHistory.add(ChatMessage("ai", chunkResponse.chunk));
+            });
+          }
+          isFinished = chunkResponse.is_finished;
+        } else {
+          isFinished = true;
+        }
+      });
+    }
+
+    print("End fetching");
+  }
+
+  String getCurrentThreadId() {
+    return historyCaptions[_currentIndex - 1].uuid;
   }
 
   @override
@@ -121,6 +178,53 @@ class _FullPage extends State<FullPage> {
       print("Error 2: $error");
     }
     return [];
+  }
+
+  Future<ChunkResponse?> _fetchNextChunk(String threadId) async {
+    try {
+      var idToken = await _getIdTokenWithRefresh();
+      final response =
+          await http.get(Uri.parse("$_baseUri/chat/next/$threadId"), headers: {
+        "Authorization": "Bearer $idToken",
+      });
+
+      if (response.statusCode == 200) {
+        String responseBody = utf8.decode(response.bodyBytes);
+        final Map<String, dynamic> json = jsonDecode(responseBody);
+        ChunkResponse chunkResponse = ChunkResponse.fromJson(json);
+        return chunkResponse;
+      } else {
+        print(
+            "Failed to authenticate with server. Status: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("Error 5: $error");
+    }
+    return null;
+  }
+
+  Future<bool> _postAskModel(String message, String thread_id) async {
+    try {
+      var idToken = await _getIdTokenWithRefresh();
+      final response = await http.post(Uri.parse("$_baseUri/chat/$thread_id"),
+          headers: {
+            "Authorization": "Bearer $idToken",
+            "Content-Type": "application/json",
+          },
+          body: jsonEncode({"message": message}));
+
+      if (response.statusCode == 200) {
+        print("thread_id: $thread_id");
+        return true;
+      } else {
+        print(
+            "Failed to authenticate with server. Status: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("Error 4: $error");
+    }
+
+    return false;
   }
 
   Future<void> _handleSignIn() async {
@@ -260,12 +364,23 @@ class _FullPage extends State<FullPage> {
                     ),
                   ),
                 ),
+                ListTile(
+                  title: const Text(
+                    "Nowy Czat",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  selected: _currentIndex == 0,
+                  onTap: () {
+                    _changeIndex(0);
+                    Navigator.pop(context);
+                  },
+                ),
                 for (var i = 0; i < historyCaptions.length; i++)
                   ListTile(
                     title: Text(historyCaptions[i].caption),
-                    selected: _currentIndex == i,
+                    selected: _currentIndex == i + 1,
                     onTap: () {
-                      _changeIndex(i);
+                      _changeIndex(i + 1);
                       Navigator.pop(context);
                     },
                   )

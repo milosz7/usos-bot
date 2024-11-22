@@ -1,3 +1,16 @@
+class ChunkResponse {
+  String chunk;
+  bool is_finished;
+  ChunkResponse(this.chunk, this.is_finished);
+
+  factory ChunkResponse.fromJson(Map<String, dynamic> json) {
+    return ChunkResponse(
+      json['chunk'] as String,
+      json['is_finished'] as bool,
+    );
+  }
+}
+
 class ChatMessage {
   String author;
   String content;
