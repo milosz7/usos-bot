@@ -15,11 +15,14 @@ from backend.models import (
 )
 from typing import List
 from uuid import uuid4
+from backend.stream_handler import StreamHandler
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 router = APIRouter()
 model_graph = RAGModel()
+
+stream_handler = StreamHandler()
 
 streams = {}
 
@@ -42,26 +45,27 @@ def get_thread(thread_id: str, session: Session):
 # TODO: add database error handling
 @router.get("/chat/captions", response_model=List[CaptionResponse])
 async def get_captions(session: SessionDep, user=Depends(verify_token)):
-    try:
-        # noinspection PyTypeChecker
-        user_threads = session.exec(
-            select(UserThread.thread_id)
-            .where(user.get("email") == UserThread.user_id)
-            .order_by(UserThread.create_date.desc())
-        ).all()
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    captions = [
-        {
-            "caption": content,
-            "thread_id": thread_id,
-        }
-        for thread_id in user_threads
-        if (content := model_graph.get_thread_caption(thread_id)["content"])
-    ]
-
-    return captions
+    return []
+    # try:
+    #     # noinspection PyTypeChecker
+    #     user_threads = session.exec(
+    #         select(UserThread.thread_id)
+    #         .where(user.get("email") == UserThread.user_id)
+    #         .order_by(UserThread.create_date.desc())
+    #     ).all()
+    # except Exception:
+    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    #
+    # captions = [
+    #     {
+    #         "caption": content,
+    #         "thread_id": thread_id,
+    #     }
+    #     for thread_id in user_threads
+    #     if (content := model_graph.get_thread_caption(thread_id)["content"])
+    # ]
+    #
+    # return captions
 
 
 @router.get("/chat/{thread_id}", response_model=List[HistoryResponse])
@@ -92,7 +96,8 @@ async def init_chat(
 
         message = body.message
         stream = model_graph.init_respond_stream(message, thread_id)
-        streams[thread_id] = stream
+        stream_handler.add_stream(stream, thread_id)
+        # streams[thread_id] = stream
     except Exception:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -114,7 +119,8 @@ async def ask_model(
 
     message = body.message
     stream = model_graph.respond_stream(message, thread_id)
-    streams[thread_id] = stream
+    stream_handler.add_stream(stream, thread_id)
+    # streams[thread_id] = stream
 
     return
 
@@ -128,15 +134,5 @@ async def get_message_chunk(
     if user.get("email") != user_thread.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    user_stream = streams[thread_id]
-    chunk = next(user_stream)
-    msg, _ = chunk
-
-    if "finish_reason" in msg.response_metadata:
-        for msg, _ in user_stream:
-            pass
-
-        del streams[thread_id]
-        return ChunkResponse(chunk="", is_finished=True)
-
-    return ChunkResponse(chunk=msg.content, is_finished=False)
+    chunk = await stream_handler.get_next_chunk(thread_id)
+    return chunk

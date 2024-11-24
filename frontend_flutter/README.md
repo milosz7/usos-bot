@@ -18,3 +18,6 @@ samples, guidance on mobile development, and a full API reference.
 ### Build application for web
 
 1. Run ```flutter build web```
+2. Go to build/web
+3. Run ```python -m http.server 8123```
+4. Open in chrome ```localhost:8123```
