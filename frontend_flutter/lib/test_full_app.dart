@@ -258,10 +258,10 @@ class _FullPage extends State<FullPage> {
     return null;
   }
 
-  Future<bool> _postAskModel(String message, String thread_id) async {
+  Future<bool> _postAskModel(String message, String threadId) async {
     try {
       var idToken = await _getIdTokenWithRefresh();
-      final response = await http.post(Uri.parse("$_baseUri/chat/$thread_id"),
+      final response = await http.post(Uri.parse("$_baseUri/chat/$threadId"),
           headers: {
             "Authorization": "Bearer $idToken",
             "Content-Type": "application/json",
