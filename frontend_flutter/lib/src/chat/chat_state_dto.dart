@@ -1,7 +1,7 @@
 class ChunkResponse {
   String chunk;
-  bool is_finished;
-  ChunkResponse(this.chunk, this.is_finished);
+  bool isFinished;
+  ChunkResponse(this.chunk, this.isFinished);
 
   factory ChunkResponse.fromJson(Map<String, dynamic> json) {
     return ChunkResponse(

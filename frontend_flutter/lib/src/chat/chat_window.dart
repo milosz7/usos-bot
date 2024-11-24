@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_flutter/styles.dart';
 import 'chat_state_dto.dart';
+import 'package:frontend_flutter/src/chat/animated_message.dart';
 
 class ChatWindow extends StatelessWidget {
   final ScrollController _scrollController = ScrollController();
@@ -83,15 +84,25 @@ class ChatMessageBox extends StatelessWidget {
                       color: theme.colorScheme.primary,
                       child: Padding(
                         padding: const EdgeInsets.all(PaddingSize.medium),
-                        child: Text(
-                          chat.content,
-                          style: TextStyle(
-                              color: theme.colorScheme.onPrimary,
-                              fontSize: screenWidth >= maxWidthMobileDevices
-                                  ? FontSize.large
-                                  : FontSize.small),
-                          softWrap: true,
-                        ),
+                        child: chat.content.isEmpty
+                            ?
+                            // DefaultTextStyle(
+                            //     style: const TextStyle(fontSize: 15.0),
+                            //     child: AnimatedTextKit(
+                            //       animatedTexts: [WavyAnimatedText('ooo')],
+                            //       isRepeatingAnimation: true,
+                            //     ))
+                            const TypingAnimation()
+                            : Text(
+                                chat.content,
+                                style: TextStyle(
+                                    color: theme.colorScheme.onPrimary,
+                                    fontSize:
+                                        screenWidth >= maxWidthMobileDevices
+                                            ? FontSize.large
+                                            : FontSize.small),
+                                softWrap: true,
+                              ),
                       ),
                     ),
                   )

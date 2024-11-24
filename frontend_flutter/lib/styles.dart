@@ -49,3 +49,8 @@ class ElevationSize {
   static const large = unit * 3;
   static const max = 9999.0;
 }
+
+class BorderRadiusSize {
+  static const max = 9999.0;
+  static const rounded = 30.0;
+}
