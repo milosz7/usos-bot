@@ -24,15 +24,33 @@ model_graph = RAGModel()
 streams = {}
 
 
+def get_thread(thread_id: str, session: Session):
+    try:
+        # noinspection PyTypeChecker
+        user_thread = session.exec(
+            select(UserThread).where(thread_id == UserThread.thread_id)
+        ).first()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    if user_thread is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return user_thread
+
+
 # TODO: add database error handling
 @router.get("/chat/captions", response_model=List[CaptionResponse])
 async def get_captions(session: SessionDep, user=Depends(verify_token)):
-    # noinspection PyTypeChecker
-    user_threads = session.exec(
-        select(UserThread.thread_id)
-        .where(user.get("email") == UserThread.user_id)
-        .order_by(UserThread.create_date.desc())
-    ).all()
+    try:
+        # noinspection PyTypeChecker
+        user_threads = session.exec(
+            select(UserThread.thread_id)
+            .where(user.get("email") == UserThread.user_id)
+            .order_by(UserThread.create_date.desc())
+        ).all()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     captions = [
         {
@@ -50,13 +68,7 @@ async def get_captions(session: SessionDep, user=Depends(verify_token)):
 async def get_chat_history(
     session: SessionDep, thread_id: str, user=Depends(verify_token)
 ):
-    # noinspection PyTypeChecker
-    user_thread = session.exec(
-        select(UserThread).where(thread_id == UserThread.thread_id)
-    ).first()
-
-    if user_thread is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    user_thread = get_thread(thread_id, session)
 
     if user.get("email") != user_thread.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -95,13 +107,7 @@ async def ask_model(
     body: MessageRequest,
     user=Depends(verify_token),
 ):
-    # noinspection PyTypeChecker
-    user_thread = session.exec(
-        select(UserThread).where(thread_id == UserThread.thread_id)
-    ).first()
-
-    if user_thread is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    user_thread = get_thread(thread_id, session)
 
     if user["email"] != user_thread.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -117,13 +123,7 @@ async def ask_model(
 async def get_message_chunk(
     session: SessionDep, thread_id: str, user=Depends(verify_token)
 ):
-    # noinspection PyTypeChecker
-    user_thread = session.exec(
-        select(UserThread).where(thread_id == UserThread.thread_id)
-    ).first()
-
-    if user_thread is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    user_thread = get_thread(thread_id, session)
 
     if user.get("email") != user_thread.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)

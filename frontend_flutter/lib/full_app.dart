@@ -84,11 +84,6 @@ class _FullPage extends State<FullPage> {
   }
 
   Future<void> _processChunks(String threadId) async {
-    setState(() {
-      _isFetching = true;
-      _currentChatHistory.add(ChatMessage("ai", ""));
-    });
-
     bool isFinished = false;
     while (!isFinished) {
       await _fetchNextChunk(threadId).then((ChunkResponse? chunkResponse) {
@@ -233,6 +228,11 @@ class _FullPage extends State<FullPage> {
   }
 
   Future<bool> _postAskModel(String message, String threadId) async {
+    setState(() {
+      _isFetching = true;
+      _currentChatHistory.add(ChatMessage("ai", ""));
+    });
+
     try {
       var idToken = await _getIdTokenWithRefresh();
       final response = await http.post(Uri.parse("$_baseUri/chat/$threadId"),
@@ -259,10 +259,19 @@ class _FullPage extends State<FullPage> {
       _logger("Error 4: $error");
     }
 
+    setState(() {
+      _isFetching = false;
+    });
+
     return false;
   }
 
   Future<String?> _postInitChat(String message) async {
+    setState(() {
+      _isFetching = true;
+      _currentChatHistory.add(ChatMessage("ai", ""));
+    });
+
     try {
       var idToken = await _getIdTokenWithRefresh();
       final response = await http.post(Uri.parse("$_baseUri/chat"),
@@ -290,6 +299,10 @@ class _FullPage extends State<FullPage> {
       }
       _logger("Error 4: $error");
     }
+
+    setState(() {
+      _isFetching = false;
+    });
     return null;
   }
 
@@ -308,6 +321,7 @@ class _FullPage extends State<FullPage> {
   Widget _loadImage(String url) {
     return Image.network(url, errorBuilder: (context, exception, stackTrace) {
       return const Placeholder();
+      //const Image(image: AssetImage('assets/user.jpg'));
     });
   }
 
