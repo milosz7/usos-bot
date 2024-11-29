@@ -20,14 +20,10 @@ class StreamEntity:
         self._update_time()
         return await self.stream.get()
 
-    def __del__(self):
-        self.stream.task_done()
-        self.stream.join()
-
 
 class StreamHandler:
     def __init__(self):
-        self.stream_ttl_in_s = 10
+        self.stream_ttl_in_s = 60
         self.remote_streams = dict()
         self.streams = dict()
         asyncio.create_task(self.consume_dangling())
@@ -35,16 +31,16 @@ class StreamHandler:
     async def consume_dangling(self):
         sleep_time_in_s = 1
         while True:
+            threads_to_delete = []
             await asyncio.sleep(sleep_time_in_s)
-            print("pre", len(self.streams))
-            # TODO: self.streams is a dict, change iteration
-            for stream in self.streams:
+            for stream_id, stream_obj in self.streams.items():
                 current_time = time.time()
-                last_access = current_time - stream.last_access
+                last_access = current_time - stream_obj.last_access
                 if last_access > self.stream_ttl_in_s:
-                    self.delete_stream(stream)
+                    threads_to_delete.append(stream_id)
 
-            print("post", len(self.streams))
+            for thread_id in threads_to_delete:
+                self.delete_stream(thread_id)
 
     async def _consume(self, thread_id):
         remote_stream = self.remote_streams[thread_id]

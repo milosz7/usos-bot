@@ -45,27 +45,26 @@ def get_thread(thread_id: str, session: Session):
 # TODO: add database error handling
 @router.get("/chat/captions", response_model=List[CaptionResponse])
 async def get_captions(session: SessionDep, user=Depends(verify_token)):
-    return []
-    # try:
-    #     # noinspection PyTypeChecker
-    #     user_threads = session.exec(
-    #         select(UserThread.thread_id)
-    #         .where(user.get("email") == UserThread.user_id)
-    #         .order_by(UserThread.create_date.desc())
-    #     ).all()
-    # except Exception:
-    #     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #
-    # captions = [
-    #     {
-    #         "caption": content,
-    #         "thread_id": thread_id,
-    #     }
-    #     for thread_id in user_threads
-    #     if (content := model_graph.get_thread_caption(thread_id)["content"])
-    # ]
-    #
-    # return captions
+    try:
+        # noinspection PyTypeChecker
+        user_threads = session.exec(
+            select(UserThread.thread_id)
+            .where(user.get("email") == UserThread.user_id)
+            .order_by(UserThread.create_date.desc())
+        ).all()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    captions = [
+        {
+            "caption": content,
+            "thread_id": thread_id,
+        }
+        for thread_id in user_threads
+        if (content := model_graph.get_thread_caption(thread_id)["content"])
+    ]
+
+    return captions
 
 
 @router.get("/chat/{thread_id}", response_model=List[HistoryResponse])

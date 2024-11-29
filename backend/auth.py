@@ -17,7 +17,7 @@ security = HTTPBearer()
 def verify_token(auth_credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = auth_credentials.credentials
     try:
-        decoded_token = auth.verify_id_token(token)
+        decoded_token = auth.verify_id_token(token, clock_skew_seconds=os.environ.get("CLOCK_SKEW_SECONDS") or 0)
         return decoded_token
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e)
