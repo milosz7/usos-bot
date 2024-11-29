@@ -66,3 +66,6 @@ firebase_options.dart
 3. Select previously created project
 4. Generate new private key
 5. Copy content of the downloaded file to the "usos-bot-firebase-adminsdk.json" file
+
+### TODO
+- clean up flutter post-compilation files
